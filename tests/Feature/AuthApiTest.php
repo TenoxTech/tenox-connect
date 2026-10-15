@@ -46,3 +46,10 @@ it('caches the auth config', function () {
 
     Http::assertSentCount(3);
 });
+
+it('registers a company for an owner', function () {
+    Http::fake(['https://id.tenox.test/api/m2m/auth/companies' => Http::response(['data' => ['user' => ['id' => 'u1'], 'access' => ['role' => 'company_admin', 'company' => ['id' => 'c1', 'reg_no' => '1234567', 'name' => 'А']]]], 201)]);
+
+    expect(app(TenoxClient::class)->registerCompany('u1', ['reg_no' => '1234567', 'name' => 'А'])['access']['role'])->toBe('company_admin');
+    Http::assertSent(fn ($request) => str_ends_with($request->url(), '/auth/companies') && $request['owner_id'] === 'u1' && $request['reg_no'] === '1234567');
+});

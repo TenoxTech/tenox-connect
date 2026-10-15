@@ -201,6 +201,15 @@ class TenoxClient
     }
 
     /**
+     * @param  array{reg_no: string, name: string, phone?: ?string, email?: ?string}  $company
+     * @return array{user: array, access: array}
+     */
+    public function registerCompany(string $ownerTenoxUserId, array $company): array
+    {
+        return $this->authCall('post', 'auth/companies', ['owner_id' => $ownerTenoxUserId, ...$company]);
+    }
+
+    /**
      * @param  array{name?: ?string, phone?: ?string, email?: ?string, current_password?: ?string, password?: ?string}  $data
      * @return array{user: array, access: array}
      */
