@@ -191,6 +191,19 @@ class TenoxClient
         return $this->authCall('post', 'auth/otp/verify', ['phone' => $phone, 'code' => $code]);
     }
 
+    public function forgotPassword(string $identifier): void
+    {
+        $this->authCall('post', 'auth/password/forgot', ['identifier' => $identifier]);
+    }
+
+    /**
+     * @return array{user: array, access: array}
+     */
+    public function resetPassword(string $identifier, string $code, string $password): array
+    {
+        return $this->authCall('post', 'auth/password/reset', ['identifier' => $identifier, 'code' => $code, 'password' => $password]);
+    }
+
     /**
      * @param  array{name: string, phone?: ?string, email?: ?string, password: string}  $data
      * @return array{user: array, access: array}

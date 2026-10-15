@@ -53,3 +53,16 @@ it('registers a company for an owner', function () {
     expect(app(TenoxClient::class)->registerCompany('u1', ['reg_no' => '1234567', 'name' => 'А'])['access']['role'])->toBe('company_admin');
     Http::assertSent(fn ($request) => str_ends_with($request->url(), '/auth/companies') && $request['owner_id'] === 'u1' && $request['reg_no'] === '1234567');
 });
+
+it('requests and completes a password reset', function () {
+    Http::fake([
+        'https://id.tenox.test/api/m2m/auth/password/forgot' => Http::response(['data' => ['sent' => true]]),
+        'https://id.tenox.test/api/m2m/auth/password/reset' => Http::response(['data' => ['user' => ['id' => 'u1'], 'access' => null]]),
+    ]);
+
+    $client = app(TenoxClient::class);
+    $client->forgotPassword('a@b.mn');
+
+    expect($client->resetPassword('a@b.mn', '123456', 'newpass123')['user']['id'])->toBe('u1');
+    Http::assertSent(fn ($request) => str_ends_with($request->url(), '/password/reset') && $request['code'] === '123456');
+});
