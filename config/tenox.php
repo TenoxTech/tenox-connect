@@ -5,6 +5,8 @@ return [
 
     'issuer' => rtrim(env('TENOX_ISSUER', env('TENOX_URL', 'https://id.tenox.mn')), '/'),
 
+    'app_key' => env('TENOX_APP_KEY'),
+
     'client_id' => env('TENOX_CLIENT_ID'),
 
     'client_secret' => env('TENOX_CLIENT_SECRET'),
@@ -18,6 +20,8 @@ return [
     'webhook_secret' => env('TENOX_WEBHOOK_SECRET'),
 
     'webhook_tolerance' => 300,
+
+    'apps_cache_ttl' => 300,
 
     'login_handler' => null,
 

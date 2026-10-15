@@ -167,7 +167,34 @@ class TenoxClient
 
     public function companyApps(string $tenoxCompanyId): array
     {
-        return $this->api('companies/'.rawurlencode($tenoxCompanyId).'/apps');
+        return $this->cache->remember(
+            self::appsCacheKey($tenoxCompanyId),
+            $this->config['apps_cache_ttl'] ?? 300,
+            fn () => $this->api('companies/'.rawurlencode($tenoxCompanyId).'/apps'),
+        );
+    }
+
+    /**
+     * @return list<array{key: string, name: string, description: ?string, icon: ?string, url: string, enabled: bool, links: list<array{label: string, url: string}>, enable_url: string}>
+     */
+    public function switcherApps(string $tenoxCompanyId): array
+    {
+        $current = $this->config['app_key'] ?? null;
+
+        return array_values(array_filter(
+            $this->companyApps($tenoxCompanyId),
+            fn (array $app) => $app['key'] !== $current,
+        ));
+    }
+
+    public function forgetCompanyApps(string $tenoxCompanyId): void
+    {
+        $this->cache->forget(self::appsCacheKey($tenoxCompanyId));
+    }
+
+    private static function appsCacheKey(string $tenoxCompanyId): string
+    {
+        return 'tenox:apps:'.$tenoxCompanyId;
     }
 
     public static function challenge(string $verifier): string

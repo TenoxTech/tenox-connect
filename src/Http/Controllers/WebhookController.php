@@ -8,6 +8,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Tenox\Connect\Events\TenoxWebhookReceived;
+use Tenox\Connect\TenoxClient;
 
 class WebhookController extends Controller
 {
@@ -35,7 +36,12 @@ class WebhookController extends Controller
             return response()->json(['status' => 'duplicate']);
         }
 
-        TenoxWebhookReceived::dispatch($payload['event'], $payload['data'] ?? [], $payload['id']);
+        $data = $payload['data'] ?? [];
+        if ($companyId = $data['company']['id'] ?? $data['company_id'] ?? null) {
+            app(TenoxClient::class)->forgetCompanyApps((string) $companyId);
+        }
+
+        TenoxWebhookReceived::dispatch($payload['event'], $data, $payload['id']);
         Cache::put($key, true, now()->addDay());
 
         return response()->json(['status' => 'ok']);

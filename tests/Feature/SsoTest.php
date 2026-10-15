@@ -151,3 +151,20 @@ it('refreshes a rejected cached client token once', function () {
     expect(app(TenoxClient::class)->company('c1')['id'])->toBe('c1');
     expect(cache('tenox:client-token:core:read'))->toBe('m2m-token');
 });
+
+it('caches switcher apps and hides the current app', function () {
+    config(['tenox.app_key' => 'sudly']);
+    $this->fakeTenox();
+    Http::fake([
+        'https://id.tenox.test/api/m2m/companies/c1/apps' => Http::response(['data' => [
+            ['key' => 'sudly', 'name' => 'Sudly', 'enabled' => true],
+            ['key' => 'ajly', 'name' => 'Ajly', 'enabled' => false],
+        ]]),
+    ]);
+
+    $client = app(TenoxClient::class);
+    expect(array_column($client->switcherApps('c1'), 'key'))->toBe(['ajly']);
+    $client->switcherApps('c1');
+
+    Http::assertSentCount(3);
+});

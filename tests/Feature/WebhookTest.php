@@ -44,3 +44,11 @@ it('is disabled without a secret', function () {
 
     signedPost($this, payload())->assertNotFound();
 });
+
+it('clears the cached app list for the company', function () {
+    cache()->put('tenox:apps:c1', [['key' => 'old']], 300);
+
+    signedPost($this, payload(['id' => 'd-9', 'event' => 'app.enabled']))->assertOk();
+
+    expect(cache()->has('tenox:apps:c1'))->toBeFalse();
+});
