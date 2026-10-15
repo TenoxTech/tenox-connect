@@ -155,6 +155,11 @@ class TenoxClient
         $this->cache->forget('tenox:client-token:'.implode(',', $scopes));
     }
 
+    public function userAccess(string $tenoxUserId, ?string $appKey = null): array
+    {
+        return $this->api('users/'.rawurlencode($tenoxUserId).'/access', ['app' => $appKey ?? $this->config['app_key']]);
+    }
+
     public function company(string $tenoxCompanyId): array
     {
         return $this->api('companies/'.rawurlencode($tenoxCompanyId));

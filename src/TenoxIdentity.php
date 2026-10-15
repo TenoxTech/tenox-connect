@@ -48,6 +48,16 @@ final class TenoxIdentity
         return $this->phoneVerified ? $this->phone : null;
     }
 
+    /**
+     * @return array{role: ?string, blocked: bool, company: ?array{id: string, reg_no: string, name: string}, source: ?string}|null
+     */
+    public function access(string $appKey): ?array
+    {
+        $access = $this->claims['tenox_access'][$appKey] ?? null;
+
+        return is_array($access) ? $access : null;
+    }
+
     public function company(string $tenoxCompanyId): ?array
     {
         foreach ($this->companies as $company) {

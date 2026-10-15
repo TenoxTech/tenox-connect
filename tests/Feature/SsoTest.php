@@ -23,7 +23,7 @@ it('redirects to tenox with pkce, state and nonce', function () {
         'client_id' => 'client-123',
         'response_type' => 'code',
         'code_challenge_method' => 'S256',
-        'scope' => 'openid profile email phone companies',
+        'scope' => 'openid profile email phone companies apps',
         'state' => $pending['state'],
         'nonce' => $pending['nonce'],
         'code_challenge' => TenoxClient::challenge($pending['verifier']),
@@ -39,6 +39,7 @@ it('completes login and hands a verified identity to the app', function () {
         'phone_number' => '+97699112233',
         'phone_number_verified' => true,
         'companies' => [['id' => 'c1', 'reg_no' => '1234567', 'name' => 'А ХХК', 'role' => 'owner']],
+        'tenox_access' => ['sudly' => ['role' => 'researcher', 'blocked' => false, 'company' => null, 'source' => 'direct']],
     ]);
     [, $params, $pending] = startLogin($this, '?return=/admin/surveys');
 
@@ -49,6 +50,8 @@ it('completes login and hands a verified identity to the app', function () {
     expect($identity->verifiedEmail())->toBe('bat@example.mn');
     expect($identity->verifiedPhone())->toBe('+97699112233');
     expect($identity->company('c1')['role'])->toBe('owner');
+    expect($identity->access('sudly')['role'])->toBe('researcher');
+    expect($identity->access('ajly'))->toBeNull();
 
     Http::assertSent(fn ($request) => str_ends_with($request->url(), '/oauth/token')
         && $request['code_verifier'] === $pending['verifier']
@@ -167,4 +170,13 @@ it('caches switcher apps and hides the current app', function () {
     $client->switcherApps('c1');
 
     Http::assertSentCount(3);
+});
+
+it('looks up a user access for the configured app', function () {
+    config(['tenox.app_key' => 'sudly']);
+    $this->fakeTenox();
+    Http::fake(['https://id.tenox.test/api/m2m/users/u1/access*' => Http::response(['data' => ['role' => 'admin', 'blocked' => false, 'company' => null, 'source' => 'direct']])]);
+
+    expect(app(TenoxClient::class)->userAccess('u1')['role'])->toBe('admin');
+    Http::assertSent(fn ($request) => str_contains($request->url(), 'access?app=sudly'));
 });

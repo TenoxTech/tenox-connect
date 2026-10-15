@@ -15,7 +15,7 @@ return [
 
     'post_logout_redirect' => env('TENOX_POST_LOGOUT_REDIRECT_URI'),
 
-    'scopes' => ['openid', 'profile', 'email', 'phone', 'companies'],
+    'scopes' => ['openid', 'profile', 'email', 'phone', 'companies', 'apps'],
 
     'webhook_secret' => env('TENOX_WEBHOOK_SECRET'),
 
