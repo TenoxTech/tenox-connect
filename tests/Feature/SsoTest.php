@@ -125,3 +125,14 @@ it('calls the m2m api with a cached client token', function () {
     Http::assertSentCount(4);
     Http::assertSent(fn ($request) => $request->hasHeader('Authorization', 'Bearer m2m-token') && str_contains($request->url(), 'reg_no=1234567'));
 });
+
+it('sends the browser to the tenox end-session endpoint', function () {
+    config(['tenox.post_logout_redirect' => 'https://app.test/login']);
+    $this->fakeTenox();
+
+    $location = $this->get('/tenox/logout')->assertRedirect()->headers->get('Location');
+    parse_str(parse_url($location, PHP_URL_QUERY), $query);
+
+    expect($location)->toStartWith('https://id.tenox.test/oauth/logout?');
+    expect($query)->toBe(['client_id' => 'client-123', 'post_logout_redirect_uri' => 'https://app.test/login']);
+});

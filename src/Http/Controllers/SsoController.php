@@ -55,6 +55,13 @@ class SsoController extends Controller
         return $this->handler->login($identity, $request);
     }
 
+    public function logout(Request $request): RedirectResponse
+    {
+        $target = config('tenox.post_logout_redirect') ?: url('/');
+
+        return redirect()->away($this->tenox->logoutUrl($target));
+    }
+
     private function redirectUri(): string
     {
         return config('tenox.redirect') ?: route('tenox.callback');

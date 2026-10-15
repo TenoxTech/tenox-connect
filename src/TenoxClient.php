@@ -58,6 +58,16 @@ class TenoxClient
         ];
     }
 
+    public function logoutUrl(string $postLogoutRedirect): string
+    {
+        $endpoint = $this->discovery()['end_session_endpoint'] ?? $this->config['url'].'/oauth/logout';
+
+        return $endpoint.'?'.http_build_query([
+            'client_id' => $this->config['client_id'],
+            'post_logout_redirect_uri' => $postLogoutRedirect,
+        ]);
+    }
+
     public function exchangeCode(string $code, string $verifier, string $redirectUri, string $nonce): TenoxIdentity
     {
         $tokens = $this->http->asForm()->timeout(10)->post($this->discovery()['token_endpoint'], [
