@@ -165,6 +165,11 @@ class TenoxClient
         return $this->cache->remember('tenox:auth-config', 300, fn () => $this->authCall('get', 'auth/config'));
     }
 
+    public function forgetAuthConfig(): void
+    {
+        $this->cache->forget('tenox:auth-config');
+    }
+
     /**
      * @return array{user: array, access: array}
      */

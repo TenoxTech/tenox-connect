@@ -52,3 +52,11 @@ it('clears the cached app list for the company', function () {
 
     expect(cache()->has('tenox:apps:c1'))->toBeFalse();
 });
+
+it('drops the cached auth config when the app settings change', function () {
+    cache()->put('tenox:auth-config', ['methods' => ['password']], 300);
+
+    signedPost($this, payload(['id' => 'd-app', 'event' => 'app.updated', 'data' => ['app' => 'sudly']]))->assertOk();
+
+    expect(cache()->has('tenox:auth-config'))->toBeFalse();
+});

@@ -37,6 +37,9 @@ class WebhookController extends Controller
         }
 
         $data = $payload['data'] ?? [];
+        if ($payload['event'] === 'app.updated') {
+            app(TenoxClient::class)->forgetAuthConfig();
+        }
         if ($companyId = $data['company']['id'] ?? $data['company_id'] ?? null) {
             app(TenoxClient::class)->forgetCompanyApps((string) $companyId);
         }
