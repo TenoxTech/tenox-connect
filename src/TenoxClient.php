@@ -160,6 +160,59 @@ class TenoxClient
         return $this->api('users/'.rawurlencode($tenoxUserId).'/access', ['app' => $appKey ?? $this->config['app_key']]);
     }
 
+    public function authConfig(): array
+    {
+        return $this->cache->remember('tenox:auth-config', 300, fn () => $this->authCall('get', 'auth/config'));
+    }
+
+    /**
+     * @return array{user: array, access: array}
+     */
+    public function passwordLogin(string $identifier, string $password): array
+    {
+        return $this->authCall('post', 'auth/login', ['identifier' => $identifier, 'password' => $password]);
+    }
+
+    public function sendOtp(string $phone): void
+    {
+        $this->authCall('post', 'auth/otp/send', ['phone' => $phone]);
+    }
+
+    /**
+     * @return array{user: array, access: array}
+     */
+    public function verifyOtp(string $phone, string $code): array
+    {
+        return $this->authCall('post', 'auth/otp/verify', ['phone' => $phone, 'code' => $code]);
+    }
+
+    /**
+     * @param  array{name: string, phone?: ?string, email?: ?string, password: string}  $data
+     * @return array{user: array, access: array}
+     */
+    public function register(array $data): array
+    {
+        return $this->authCall('post', 'auth/register', $data);
+    }
+
+    /**
+     * @param  array{name?: ?string, phone?: ?string, email?: ?string, current_password?: ?string, password?: ?string}  $data
+     * @return array{user: array, access: array}
+     */
+    public function updateUser(string $tenoxUserId, array $data): array
+    {
+        return $this->authCall('patch', 'auth/users/'.rawurlencode($tenoxUserId), $data);
+    }
+
+    /**
+     * @param  list<array{ref: int|string, name?: ?string, phone?: ?string, email?: ?string, password_hash?: ?string, phone_verified?: bool, email_verified?: bool}>  $users
+     * @return list<array{ref: int|string, status: string, id?: string, reason?: string}>
+     */
+    public function importUsers(array $users): array
+    {
+        return $this->authCall('post', 'users/import', ['users' => $users], 'core:write');
+    }
+
     public function company(string $tenoxCompanyId): array
     {
         return $this->api('companies/'.rawurlencode($tenoxCompanyId));
@@ -200,6 +253,30 @@ class TenoxClient
     private static function appsCacheKey(string $tenoxCompanyId): string
     {
         return 'tenox:apps:'.$tenoxCompanyId;
+    }
+
+    private function authCall(string $method, string $path, array $data = [], string $scope = 'core:auth'): array
+    {
+        $request = fn () => $this->http->withToken($this->clientToken([$scope]))
+            ->acceptJson()
+            ->timeout(15)
+            ->{$method}($this->config['url'].'/api/m2m/'.$path, $data);
+
+        $response = $request();
+
+        if ($response->status() === 401) {
+            $this->forgetClientToken([$scope]);
+            $response = $request();
+        }
+
+        if ($response->successful()) {
+            return $response->json('data') ?? [];
+        }
+
+        $errors = (array) $response->json('errors', []);
+        $message = collect($errors)->flatten()->first() ?? $response->json('message') ?? 'Tenox ID-тай холбогдож чадсангүй.';
+
+        throw new TenoxAuthException($message, $response->status(), $errors);
     }
 
     public static function challenge(string $verifier): string
