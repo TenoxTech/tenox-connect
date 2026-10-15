@@ -136,3 +136,18 @@ it('sends the browser to the tenox end-session endpoint', function () {
     expect($location)->toStartWith('https://id.tenox.test/oauth/logout?');
     expect($query)->toBe(['client_id' => 'client-123', 'post_logout_redirect_uri' => 'https://app.test/login']);
 });
+
+it('refreshes a rejected cached client token once', function () {
+    $this->fakeTenox();
+    cache()->put('tenox:client-token:core:read', 'stale-token', 3600);
+    Http::fake([
+        'https://id.tenox.test/api/m2m/*' => function ($request) {
+            return $request->hasHeader('Authorization', 'Bearer stale-token')
+                ? Http::response(['message' => 'Unauthenticated.'], 401)
+                : Http::response(['data' => ['id' => 'c1']]);
+        },
+    ]);
+
+    expect(app(TenoxClient::class)->company('c1')['id'])->toBe('c1');
+    expect(cache('tenox:client-token:core:read'))->toBe('m2m-token');
+});

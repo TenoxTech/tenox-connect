@@ -135,12 +135,24 @@ class TenoxClient
 
     public function api(string $path, array $query = []): array
     {
-        return $this->http->withToken($this->clientToken())
+        $request = fn () => $this->http->withToken($this->clientToken())
             ->acceptJson()
             ->timeout(10)
-            ->get($this->config['url'].'/api/m2m/'.ltrim($path, '/'), $query)
-            ->throw()
-            ->json('data');
+            ->get($this->config['url'].'/api/m2m/'.ltrim($path, '/'), $query);
+
+        $response = $request();
+
+        if ($response->status() === 401) {
+            $this->forgetClientToken();
+            $response = $request();
+        }
+
+        return $response->throw()->json('data');
+    }
+
+    public function forgetClientToken(array $scopes = ['core:read']): void
+    {
+        $this->cache->forget('tenox:client-token:'.implode(',', $scopes));
     }
 
     public function company(string $tenoxCompanyId): array
