@@ -66,3 +66,14 @@ it('requests and completes a password reset', function () {
     expect($client->resetPassword('a@b.mn', '123456', 'newpass123')['user']['id'])->toBe('u1');
     Http::assertSent(fn ($request) => str_ends_with($request->url(), '/password/reset') && $request['code'] === '123456');
 });
+
+it('changes a contact through a verification code', function () {
+    Http::fake([
+        'https://id.tenox.test/api/m2m/auth/users/u1/contact/send' => Http::response(['data' => ['sent' => true, 'value' => '+97688001122']]),
+        'https://id.tenox.test/api/m2m/auth/users/u1/contact/verify' => Http::response(['data' => ['user' => ['id' => 'u1', 'phone' => '+97688001122', 'phone_verified' => true], 'access' => null]]),
+    ]);
+
+    $client = app(TenoxClient::class);
+    expect($client->sendContactCode('u1', 'phone', '88001122'))->toBe('+97688001122');
+    expect($client->verifyContact('u1', 'phone', '88001122', '123456')['user']['phone_verified'])->toBeTrue();
+});

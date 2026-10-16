@@ -232,6 +232,23 @@ class TenoxClient
     }
 
     /**
+     * @param  'phone'|'email'  $type
+     */
+    public function sendContactCode(string $tenoxUserId, string $type, string $value): string
+    {
+        return $this->authCall('post', 'auth/users/'.rawurlencode($tenoxUserId).'/contact/send', ['type' => $type, 'value' => $value])['value'];
+    }
+
+    /**
+     * @param  'phone'|'email'  $type
+     * @return array{user: array, access: array}
+     */
+    public function verifyContact(string $tenoxUserId, string $type, string $value, string $code): array
+    {
+        return $this->authCall('post', 'auth/users/'.rawurlencode($tenoxUserId).'/contact/verify', ['type' => $type, 'value' => $value, 'code' => $code]);
+    }
+
+    /**
      * @param  list<array{ref: int|string, name?: ?string, phone?: ?string, email?: ?string, password_hash?: ?string, phone_verified?: bool, email_verified?: bool}>  $users
      * @return list<array{ref: int|string, status: string, id?: string, reason?: string}>
      */
