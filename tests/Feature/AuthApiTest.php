@@ -77,3 +77,9 @@ it('changes a contact through a verification code', function () {
     expect($client->sendContactCode('u1', 'phone', '88001122'))->toBe('+97688001122');
     expect($client->verifyContact('u1', 'phone', '88001122', '123456')['user']['phone_verified'])->toBeTrue();
 });
+
+it('reads a user with verification status', function () {
+    Http::fake(['https://id.tenox.test/api/m2m/auth/users/u1' => Http::response(['data' => ['user' => ['id' => 'u1', 'phone_verified' => true], 'access' => null]])]);
+
+    expect(app(TenoxClient::class)->getUser('u1')['user']['phone_verified'])->toBeTrue();
+});
