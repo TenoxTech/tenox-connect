@@ -223,7 +223,7 @@ class TenoxClient
     }
 
     /**
-     * @param  array{name?: ?string, phone?: ?string, email?: ?string, current_password?: ?string, password?: ?string}  $data
+     * @param  array{name?: ?string, current_password?: ?string, password?: ?string}  $data
      * @return array{user: array, access: array}
      */
     public function updateUser(string $tenoxUserId, array $data): array
