@@ -191,6 +191,14 @@ class TenoxClient
         return $this->authCall('post', 'auth/otp/verify', ['phone' => $phone, 'code' => $code]);
     }
 
+    /**
+     * @return array{user: array, access: array}
+     */
+    public function socialLogin(string $firebaseIdToken): array
+    {
+        return $this->authCall('post', 'auth/social', ['id_token' => $firebaseIdToken]);
+    }
+
     public function forgotPassword(string $identifier): void
     {
         $this->authCall('post', 'auth/password/forgot', ['identifier' => $identifier]);
@@ -229,6 +237,11 @@ class TenoxClient
     public function updateUser(string $tenoxUserId, array $data): array
     {
         return $this->authCall('patch', 'auth/users/'.rawurlencode($tenoxUserId), $data);
+    }
+
+    public function deleteUser(string $tenoxUserId): void
+    {
+        $this->authCall('delete', 'auth/users/'.rawurlencode($tenoxUserId));
     }
 
     /**
