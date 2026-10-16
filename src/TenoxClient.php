@@ -194,9 +194,9 @@ class TenoxClient
     /**
      * @return array{user: array, access: array}
      */
-    public function socialLogin(string $firebaseIdToken): array
+    public function socialLogin(string $provider, string $idToken, ?string $name = null): array
     {
-        return $this->authCall('post', 'auth/social', ['id_token' => $firebaseIdToken]);
+        return $this->authCall('post', 'auth/social', array_filter(['provider' => $provider, 'id_token' => $idToken, 'name' => $name]));
     }
 
     public function forgotPassword(string $identifier): void

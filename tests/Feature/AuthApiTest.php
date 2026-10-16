@@ -84,11 +84,12 @@ it('reads a user with verification status', function () {
     expect(app(TenoxClient::class)->getUser('u1')['user']['phone_verified'])->toBeTrue();
 });
 
-it('signs in with a firebase id token', function () {
+it('signs in with a google or apple id token', function () {
     Http::fake(['https://id.tenox.test/api/m2m/auth/social' => Http::response(['data' => ['user' => ['id' => 'u1'], 'access' => null]], 201)]);
 
-    expect(app(TenoxClient::class)->socialLogin('firebase-token')['user']['id'])->toBe('u1');
-    Http::assertSent(fn ($request) => str_ends_with($request->url(), '/api/m2m/auth/social') && $request['id_token'] === 'firebase-token');
+    expect(app(TenoxClient::class)->socialLogin('apple', 'apple-token', 'Бат')['user']['id'])->toBe('u1');
+    Http::assertSent(fn ($request) => str_ends_with($request->url(), '/api/m2m/auth/social')
+        && $request['provider'] === 'apple' && $request['id_token'] === 'apple-token' && $request['name'] === 'Бат');
 });
 
 it('deletes a user account', function () {
