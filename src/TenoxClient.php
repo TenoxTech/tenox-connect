@@ -239,9 +239,21 @@ class TenoxClient
         return $this->authCall('patch', 'auth/users/'.rawurlencode($tenoxUserId), $data);
     }
 
-    public function deleteUser(string $tenoxUserId): void
+    /**
+     * @return array{deleted: bool, unlinked: bool}
+     */
+    public function deleteUser(string $tenoxUserId): array
     {
-        $this->authCall('delete', 'auth/users/'.rawurlencode($tenoxUserId));
+        return $this->authCall('delete', 'auth/users/'.rawurlencode($tenoxUserId));
+    }
+
+    /**
+     * @param  array{name?: ?string, phone?: ?string, role?: ?string}  $profile
+     * @return array{user: array, access: ?array}
+     */
+    public function setAppProfile(string $tenoxUserId, array $profile): array
+    {
+        return $this->authCall('put', 'auth/users/'.rawurlencode($tenoxUserId).'/app-profile', $profile);
     }
 
     /**
@@ -270,7 +282,7 @@ class TenoxClient
     }
 
     /**
-     * @param  list<array{ref: int|string, name?: ?string, phone?: ?string, email?: ?string, password_hash?: ?string, phone_verified?: bool, email_verified?: bool}>  $users
+     * @param  list<array{ref: int|string, name?: ?string, phone?: ?string, email?: ?string, password_hash?: ?string, phone_verified?: bool, email_verified?: bool, identities?: list<array{provider: 'google'|'apple', subject: string}>, profile?: array{name?: ?string, phone?: ?string, role?: ?string}}>  $users
      * @return list<array{ref: int|string, status: string, id?: string, reason?: string}>
      */
     public function importUsers(array $users): array
@@ -339,7 +351,7 @@ class TenoxClient
         }
 
         $errors = (array) $response->json('errors', []);
-        $message = collect($errors)->flatten()->first() ?? $response->json('message') ?? 'Tenox ID-тай холбогдож чадсангүй.';
+        $message = collect($errors)->flatten()->first() ?? $response->json('message') ?? 'Сервертэй холбогдож чадсангүй. Түр хүлээгээд дахин оролдоно уу.';
 
         throw new TenoxAuthException($message, $response->status(), $errors);
     }

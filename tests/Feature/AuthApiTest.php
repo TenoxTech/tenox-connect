@@ -92,9 +92,16 @@ it('signs in with a google or apple id token', function () {
         && $request['provider'] === 'apple' && $request['id_token'] === 'apple-token' && $request['name'] === 'Бат');
 });
 
-it('deletes a user account', function () {
-    Http::fake(['https://id.tenox.test/api/m2m/auth/users/u1' => Http::response(['data' => ['deleted' => true]])]);
+it('deletes or unlinks a user account', function () {
+    Http::fake(['https://id.tenox.test/api/m2m/auth/users/u1' => Http::response(['data' => ['deleted' => false, 'unlinked' => true]])]);
 
-    app(TenoxClient::class)->deleteUser('u1');
+    expect(app(TenoxClient::class)->deleteUser('u1'))->toBe(['deleted' => false, 'unlinked' => true]);
     Http::assertSent(fn ($request) => $request->method() === 'DELETE' && str_ends_with($request->url(), '/api/m2m/auth/users/u1'));
+});
+
+it('reports the app profile of a user', function () {
+    Http::fake(['https://id.tenox.test/api/m2m/auth/users/u1/app-profile' => Http::response(['data' => ['user' => ['id' => 'u1', 'name' => 'Батмөнх'], 'access' => null]])]);
+
+    expect(app(TenoxClient::class)->setAppProfile('u1', ['name' => 'Батмөнх', 'role' => 'employer'])['user']['name'])->toBe('Батмөнх');
+    Http::assertSent(fn ($request) => $request->method() === 'PUT' && $request['role'] === 'employer');
 });
