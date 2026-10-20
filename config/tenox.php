@@ -27,6 +27,7 @@ return [
 
     'routes' => [
         'enabled' => true,
+        'sso' => true,
         'prefix' => 'tenox',
         'middleware' => ['web'],
         'webhook_middleware' => ['api'],
